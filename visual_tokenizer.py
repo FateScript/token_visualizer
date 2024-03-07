@@ -48,7 +48,7 @@ def get_tokenizer_and_vocab(name):
     return tokenizer, rev_vocab
 
 
-def tokenize(name, text) -> Dict:
+def tokenize(name: str, text: str) -> Dict:
     tokenizer, rev_vocab = get_tokenizer_and_vocab(name)
 
     ids = tokenizer.encode(text)
