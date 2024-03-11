@@ -37,13 +37,11 @@ The command will start a OpenAIProxy model, to use it without exception, user sh
 `token_visualizer` also support `OpenAIModel` and HuggingFace `TransformerModel` in [models.py](https://github.com/FateScript/token_visualizer/blob/main/token_visualizer/models.py), feel free to modify the code.
 
 #### Demo gif
-After inputing your prompt, you will the large language model's answer and the answer's visualization result.
-
-**The redder the color of the token, the lower the corresponding probability.**
-
-**The greener the color of the token, the higher the corresponding probability.**
+After inputing your prompt, you will see the large language model's answer and the answer's visualization result.
 
 <img src="assets/inference.gif">
+
+**The redder the color of the token, the lower the corresponding probability. The greener the color of the token, the higher the corresponding probability.**
 
 ### Tokenizer
 
@@ -58,6 +56,7 @@ python3 visual_tokenizer.py
 User could select tokenizer to interacte with and text to encode. For speical string 
 <img src="assets/tokenizer.gif">
 
+
 ## TODO
 - [ ] Support dark mode for visualization.
 - [ ] Support TGI generate result.
@@ -67,6 +66,7 @@ User could select tokenizer to interacte with and text to encode. For speical st
 
 * [LLM architecture visualization](https://bbycroft.net/llm)
 * [perplexity visualization](https://bbycroft.net/ppl)
+
 
 ## Acknowledgement
 
