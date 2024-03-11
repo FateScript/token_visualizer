@@ -5,6 +5,7 @@ from typing import Tuple
 import gradio as gr
 from loguru import logger
 
+import token_visualizer
 from token_visualizer import css_style, ensure_os_env
 
 BASE_URL = ensure_os_env("BASE_URL")
