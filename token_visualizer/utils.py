@@ -5,13 +5,13 @@ from typing import Union
 
 from dotenv import load_dotenv
 
-import llm_visualizer
+import token_visualizer
 
 __all__ = ["css_style", "ensure_os_env"]
 
 
 def css_style() -> str:
-    with open(os.path.join(os.path.dirname(llm_visualizer.__file__), "main.css")) as f:
+    with open(os.path.join(os.path.dirname(token_visualizer.__file__), "main.css")) as f:
         css_style = f.read()
     css_html = f"<style>{css_style}</style>"""
     return css_html

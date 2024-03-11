@@ -1,6 +1,6 @@
 
 ## Introduction
-LLM visualizer is a small toolkit to visualize LLM.
+token visualizer is a token-level visualization tool to visualize LLM.
 
 ## Quick start
 
@@ -8,8 +8,8 @@ LLM visualizer is a small toolkit to visualize LLM.
 
 Run the following command to install the package.
 ```shell
-git clone git@github.com:FateScript/llm_visualizer.git
-cd llm_visualizer
+git clone git@github.com:FateScript/token_visualizer.git
+cd token_visualizer
 pip install -v -e .  # or  python3 setup.py develop
 ```
 
@@ -27,6 +27,6 @@ pip install -v -e .  # or  python3 setup.py develop
 ## Related projects/websites
 
 * [LLM architecture visualization](https://bbycroft.net/llm)
-* [PPL visualization](https://bbycroft.net/ppl) 
+* [perplexity visualization](https://bbycroft.net/ppl)
 
 ## Acknowledgement

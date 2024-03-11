@@ -5,14 +5,13 @@ from typing import Tuple
 import gradio as gr
 from loguru import logger
 
-import llm_visualizer
-from llm_visualizer import css_style, ensure_os_env
+from token_visualizer import css_style, ensure_os_env
 
 BASE_URL = ensure_os_env("BASE_URL")
 OPENAI_API_KEY = ensure_os_env("OPENAI_KEY")
 
-# MODEL = llm_visualizer.TransformerModel()
-MODEL = llm_visualizer.OpenAIProxyModel(
+# MODEL = token_visualizer.TransformerModel()
+MODEL = token_visualizer.OpenAIProxyModel(
     base_url=BASE_URL,
     api_key=OPENAI_API_KEY,
     model_name="gpt-4-turbo-preview",
