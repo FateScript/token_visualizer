@@ -33,7 +33,7 @@ def text_analysis(
     MODEL.topk = topk
     MODEL.topp = topp
 
-    tokens = MODEL.genearte_topk_per_token(text)
+    tokens = MODEL.generate_topk_per_token(text)
     html = MODEL.html_to_visualize(tokens)
     return MODEL.generated_answer, html
 

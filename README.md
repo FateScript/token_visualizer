@@ -58,8 +58,10 @@ User could select tokenizer to interacte with and text to encode. For speical st
 
 
 ## TODO
-- [ ] Support dark mode for visualization.
+- [ ] Support multi-turn chat visualization.
+- [ ] Support ppl visualization.
 - [ ] Support TGI generate result.
+- [ ] Support dark mode.
 
 
 ## Related projects/websites
