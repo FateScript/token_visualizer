@@ -128,7 +128,7 @@ class TopkTokenModel:
     topk_per_token: int = 5  # number of topk tokens to generate for each token
     generated_answer: str = None  # generated answer from model, to display in frontend
 
-    def genearte_topk_per_token(self, text: str) -> List[Token]:
+    def generate_topk_per_token(self, text: str) -> List[Token]:
         raise NotImplementedError
 
     def html_to_visualize(self, tokens: List[Token]) -> str:
@@ -151,7 +151,7 @@ class TransformerModel(TopkTokenModel):
             self.rev_vocab = format_reverse_vocab(self.tokenizer)
         return self.model, self.tokenizer
 
-    def genearte_topk_per_token(self, text: str) -> List[Token]:
+    def generate_topk_per_token(self, text: str) -> List[Token]:
         model, tokenizer = self.get_model_tokenizer()
         rev_vocab = self.rev_vocab
         topk_tokens, topk_probs, sequences = generate_topk_token_prob(
@@ -180,7 +180,7 @@ class TGIModel(TopkTokenModel):
     # tgi support top_n_tokens, reference below:
     # https://github.com/huggingface/text-generation-inference/blob/7dbaf9e9013060af52024ea1a8b361b107b50a69/proto/generate.proto#L108-L109
 
-    def genearte_topk_per_token(self, text: str) -> List[Token]:
+    def generate_topk_per_token(self, text: str) -> List[Token]:
         raise NotImplementedError
 
 
@@ -201,7 +201,7 @@ class OpenAIModel(TopkTokenModel):
         assert self.api_key is not None, "Please provide api key to access openai api."
         self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
 
-    def genearte_topk_per_token(self, text: str, **kwargs) -> List[Token]:
+    def generate_topk_per_token(self, text: str, **kwargs) -> List[Token]:
         kwargs = {
             "temperature": self.temperature,
             "top_p": self.topp,
@@ -264,7 +264,7 @@ class OpenAIProxyModel(TopkTokenModel):
         data = json.loads(response.text)
         return data
 
-    def genearte_topk_per_token(self, text: str, **kwargs) -> List[Token]:
+    def generate_topk_per_token(self, text: str, **kwargs) -> List[Token]:
         kwargs = {
             "temperature": self.temperature,
             "top_p": self.topp,
