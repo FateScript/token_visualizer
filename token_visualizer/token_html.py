@@ -120,9 +120,10 @@ def tokens_info_to_html(tokens: List[Token], special_for_newline: bool = True) -
         hover_html = single_token_html(token)
         rgb = color_token_by_logprob(token.logprob, min_logprob, max_logprob)
         token_text = token.text
-        is_newline = repr("\n")[1:-1] in token.text
+        token_text = token_text.replace("<", "&lt;").replace(">", "&gt;")  # make token like <func_call> display correctly  # noqa
+        is_newline = repr("\n")[1:-1] in token_text
         if special_for_newline and is_newline:
-            token_text = f'<span class="ppl-pseudo-token">{token.text}</span>'
+            token_text = f'<span class="ppl-pseudo-token">{token_text}</span>'
         token_html = f'<span class="ppl-token" style="background: {rgb};">{token_text}{hover_html}</span>'  # noqa
         if is_newline:
             token_html += "<br>"
