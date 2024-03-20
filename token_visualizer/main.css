@@ -56,7 +56,6 @@
 }
 
 .ppl-hud {
-    display: none;
     position: absolute;
     top: calc(100% + 4px);
     left: 0;
@@ -66,6 +65,8 @@
     padding: 4px 8px;
     border-radius: 4px;
     z-index: 5;
+    opacity: 0;
+    visibility: hidden;
 }
 
 .ppl-hud-row {
@@ -83,5 +84,6 @@
     margin-top: 8px;
 }
 .ppl-token:hover .ppl-hud {
-    display: block;
+    opacity: 1;
+    visibility: visible;
 }
