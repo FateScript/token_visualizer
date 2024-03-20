@@ -132,7 +132,7 @@ class TopkTokenModel:
         raise NotImplementedError
 
     def html_to_visualize(self, tokens: List[Token]) -> str:
-        return tokens_info_to_html(tokens, special_for_newline=False)
+        return tokens_info_to_html(tokens)
 
 
 @dataclass
@@ -173,6 +173,40 @@ class TransformerModel(TopkTokenModel):
             display_token = Token(f"{rev_vocab[seq_id]}", seq_id_prob, candidate_tokens)
             gen_tokens.append(display_token)
         return gen_tokens
+
+
+def tgi_response(  # type: ignore[return]
+    input_text: str,
+    url: str,
+    max_new_tokens: int = 2048,
+    repetition_penalty: float = 1.1,
+    temperature: float = 0.01,
+    top_k: int = 5,
+    top_p: float = 0.85,
+    do_sample: bool = True,
+    topk_logits: int = 5,
+    **kwargs
+) -> Dict:
+    headers = {'Content-Type': 'application/json'}
+    params = {
+        'max_new_tokens': max_new_tokens,
+        'repetition_penalty': repetition_penalty,
+        'do_sample': do_sample,
+        'temperature': temperature,
+        'top_n_tokens': topk_logits,
+        **kwargs,
+    }
+    if do_sample:  # tgi use or logic for top_k/top_p with do_sample
+        params.update({'top_k': top_k, 'top_p': top_p})
+
+    data = {'inputs': input_text, 'parameters': params}
+
+    response = requests.post(url, json=data, headers=headers)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error {response.status_code}: {response.text}")
 
 
 @dataclass

@@ -6,7 +6,7 @@ import math
 import operator
 import statistics
 from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 __all__ = [
     "Token",
@@ -24,11 +24,23 @@ class Token:
     text: str
     prob: float
     top_candidates: List = field(default_factory=list)
-    ppl: float = field(default=None)
+    ppl: Union[float, None] = field(default=None)
 
     @property
     def logprob(self) -> float:
         return math.log(self.prob)
+
+
+def text_to_html_token(text: str) -> str:
+    """Convert a raw text to token that could be display in html.
+    For example, "<func_call>" will be converted to "&lt;func_call&gt;".
+    """
+    if len(text) == 0:  # special token
+        return "␣(null)"
+    text = text.replace("<", "&lt;").replace(">", "&gt;")  # display token like <func_call> correctly  # noqa
+    text = text.replace(" ", "␣")  # display whitespace
+    text = text.replace("\n", "↵")  # display newline
+    return text
 
 
 def candidate_tokens_html(topk_candidate_tokens: List[Token]) -> str:
@@ -37,7 +49,7 @@ def candidate_tokens_html(topk_candidate_tokens: List[Token]) -> str:
         '<span>{token}</span><span class="ppl-hud-label">{prob}</span></span>'
 
     html_text = "".join([
-        template.format(token=token.text, prob=f"{token.prob:.3%}")
+        template.format(token=text_to_html_token(token.text), prob=f"{token.prob:.3%}")
         for token in topk_candidate_tokens
     ])
     html_text = f'<div class="ppl-predictions">{html_text}</div>'
@@ -103,14 +115,12 @@ def tokens_min_max_logprob(tokens: List[Token]) -> Tuple[float, float]:
     return min_logprob, max_logprob
 
 
-def tokens_info_to_html(tokens: List[Token], special_for_newline: bool = True) -> str:
+def tokens_info_to_html(tokens: List[Token]) -> str:
     """
     Generate html for a list of token, include token color and hover text.
 
     Args:
         tokens (List[Token]): a list of tokens to generate html for.
-        special_for_newline (bool, optional): whether to use special style for newline token.
-            Defaults to True.
     """
     min_logprob, max_logprob = tokens_min_max_logprob(tokens)
     set_tokens_ppl(tokens)
@@ -119,10 +129,9 @@ def tokens_info_to_html(tokens: List[Token], special_for_newline: bool = True) -
     for token in tokens:
         hover_html = single_token_html(token)
         rgb = color_token_by_logprob(token.logprob, min_logprob, max_logprob)
-        token_text = token.text
-        token_text = token_text.replace("<", "&lt;").replace(">", "&gt;")  # make token like <func_call> display correctly  # noqa
-        is_newline = repr("\n")[1:-1] in token_text
-        if special_for_newline and is_newline:
+        is_newline = "\n" in token.text
+        token_text = text_to_html_token(token.text)
+        if is_newline:
             token_text = f'<span class="ppl-pseudo-token">{token_text}</span>'
         token_html = f'<span class="ppl-token" style="background: {rgb};">{token_text}{hover_html}</span>'  # noqa
         if is_newline:
