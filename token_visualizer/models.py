@@ -127,12 +127,14 @@ class TopkTokenModel:
 
     topk_per_token: int = 5  # number of topk tokens to generate for each token
     generated_answer: str = None  # generated answer from model, to display in frontend
+    display_whitespace: bool = False
 
     def generate_topk_per_token(self, text: str) -> List[Token]:
         raise NotImplementedError
 
     def html_to_visualize(self, tokens: List[Token]) -> str:
-        return tokens_info_to_html(tokens)
+        """Generate html to visualize the tokens."""
+        return tokens_info_to_html(tokens, display_whitespace=self.display_whitespace)
 
 
 @dataclass

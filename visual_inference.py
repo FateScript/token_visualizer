@@ -21,10 +21,13 @@ MODEL = token_visualizer.OpenAIProxyModel(
 
 @logger.catch(reraise=True)
 def text_analysis(
-    text: str, do_sample: bool, temperature: float,
+    text: str,
+    display_whitespace: bool,
+    do_sample: bool, temperature: float,
     max_tokens: int, repetition_penalty: float,
     num_beams: int, topk: int, topp: float,
 ) -> Tuple[str, str]:
+    MODEL.display_whitespace = display_whitespace
     MODEL.do_sample = do_sample
     MODEL.temperature = temperature
     MODEL.max_tokens = max_tokens
@@ -43,9 +46,10 @@ def demo(share: bool = True):
         text_analysis,
         [
             gr.TextArea(placeholder="Please input text here"),
+            gr.Checkbox(value=False, label="display whitespace"),
             gr.Checkbox(value=False, label="do_sample"),
             gr.Slider(minimum=0, maximum=1, step=0.05, value=1.0, label="temperature"),
-            gr.Slider(minimum=1, maximum=4096, step=1, value=64, label="max tokens"),
+            gr.Slider(minimum=1, maximum=4096, step=1, value=256, label="max tokens"),
             gr.Slider(minimum=1, maximum=2, step=0.1, value=1.0, label="repetition penalty"),
             gr.Slider(minimum=1, maximum=10, step=1, value=1, label="num beams"),
             gr.Slider(minimum=1, maximum=100, step=1, value=50, label="topk"),
@@ -66,4 +70,4 @@ def demo(share: bool = True):
 
 
 if __name__ == "__main__":
-    demo(share=True)
+    demo(share=False)

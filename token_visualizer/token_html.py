@@ -31,15 +31,20 @@ class Token:
         return math.log(self.prob)
 
 
-def text_to_html_token(text: str) -> str:
+def text_to_html_token(text: str, replace_whitespace: bool = True) -> str:
     """Convert a raw text to token that could be display in html.
     For example, "<func_call>" will be converted to "&lt;func_call&gt;".
+
+    Args:
+        text (str): raw text.
+        replace_whitespace (bool, optional): whether to replace whitespace. Defaults to True.
     """
-    if len(text) == 0:  # special token
-        return "␣(null)"
     text = text.replace("<", "&lt;").replace(">", "&gt;")  # display token like <func_call> correctly  # noqa
-    text = text.replace(" ", "␣")  # display whitespace
     text = text.replace("\n", "↵")  # display newline
+    if replace_whitespace:
+        text = text.replace(" ", "␣")  # display whitespace
+        if len(text) == 0:  # special token
+            return "␣(null)"
     return text
 
 
@@ -115,7 +120,7 @@ def tokens_min_max_logprob(tokens: List[Token]) -> Tuple[float, float]:
     return min_logprob, max_logprob
 
 
-def tokens_info_to_html(tokens: List[Token]) -> str:
+def tokens_info_to_html(tokens: List[Token], display_whitespace: bool = True) -> str:
     """
     Generate html for a list of token, include token color and hover text.
 
@@ -130,7 +135,7 @@ def tokens_info_to_html(tokens: List[Token]) -> str:
         hover_html = single_token_html(token)
         rgb = color_token_by_logprob(token.logprob, min_logprob, max_logprob)
         is_newline = "\n" in token.text
-        token_text = text_to_html_token(token.text)
+        token_text = text_to_html_token(token.text, replace_whitespace=display_whitespace)
         if is_newline:
             token_text = f'<span class="ppl-pseudo-token">{token_text}</span>'
         token_html = f'<span class="ppl-token" style="background: {rgb};">{token_text}{hover_html}</span>'  # noqa
