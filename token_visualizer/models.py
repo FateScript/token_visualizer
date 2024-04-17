@@ -4,12 +4,12 @@ import json
 import math
 import os
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import requests
 import torch
-from openai import OpenAI
 from loguru import logger
+from openai import OpenAI
 from requests.adapters import HTTPAdapter
 from retrying import retry
 from urllib3.util import Retry
@@ -130,6 +130,17 @@ class TopkTokenModel:
     display_whitespace: bool = False
 
     def generate_topk_per_token(self, text: str) -> List[Token]:
+        """
+        Generate prob, text and candidates for each token of the model's output.
+        This function is used to visualize the inference process.
+        """
+        raise NotImplementedError
+
+    def generate_inputs_prob(self, text: str) -> List[Token]:
+        """
+        Generate prob and text for each token of the input text.
+        This function is used to visualize the ppl.
+        """
         raise NotImplementedError
 
     def html_to_visualize(self, tokens: List[Token]) -> str:
@@ -186,22 +197,22 @@ def tgi_response(  # type: ignore[return]
     top_k: int = 5,
     top_p: float = 0.85,
     do_sample: bool = True,
-    topk_logits: int = 5,
+    topk_logits: Optional[int] = None,
     **kwargs
 ) -> Dict:
-    headers = {'Content-Type': 'application/json'}
+    headers = {"Content-Type": "application/json"}
     params = {
-        'max_new_tokens': max_new_tokens,
-        'repetition_penalty': repetition_penalty,
-        'do_sample': do_sample,
-        'temperature': temperature,
-        'top_n_tokens': topk_logits,
+        "max_new_tokens": max_new_tokens,
+        "repetition_penalty": repetition_penalty,
+        "do_sample": do_sample,
+        "temperature": temperature,
+        "top_n_tokens": topk_logits,
         **kwargs,
     }
     if do_sample:  # tgi use or logic for top_k/top_p with do_sample
-        params.update({'top_k': top_k, 'top_p': top_p})
+        params.update({"top_k": top_k, "top_p": top_p})
 
-    data = {'inputs': input_text, 'parameters': params}
+    data = {"inputs": input_text, "parameters": params}
 
     response = requests.post(url, json=data, headers=headers)
 
@@ -213,12 +224,38 @@ def tgi_response(  # type: ignore[return]
 
 @dataclass
 class TGIModel(TopkTokenModel):
+
+    url: Optional[str] = None
+    system_prompt = ""
+    decoder_input_details: bool = False  # input logprobs
+
     # tgi support top_n_tokens, reference below:
     # https://github.com/huggingface/text-generation-inference/blob/7dbaf9e9013060af52024ea1a8b361b107b50a69/proto/generate.proto#L108-L109
 
     def generate_topk_per_token(self, text: str) -> List[Token]:
         raise NotImplementedError
 
+    def generate_inputs_prob(self, text: str) -> List[Token]:
+        assert self.url is not None, "Please provide url to access tgi api."
+        json_response = tgi_response(
+            text, url=self.url,
+            max_new_tokens=self.max_tokens,
+            repetition_penalty=self.repetition_penalty,
+            temperature=self.temperature,
+            top_k=self.topk,
+            top_p=min(self.topp, 0.99),
+            do_sample=self.do_sample,
+            decoder_input_details=self.decoder_input_details,
+        )
+        response = json_response[0]
+        token_details = response["details"]["prefill"]
+        tokens = []
+        for token in token_details:
+            logprob = token.get("logprob", None)
+            if logprob is None:
+                continue
+            tokens.append(Token(token["text"], math.exp(logprob)))
+        return tokens
 
 @dataclass
 class OpenAIModel(TopkTokenModel):

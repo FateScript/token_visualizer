@@ -43,6 +43,15 @@ After inputing your prompt, you will see the large language model's answer and t
 
 **The redder the color of the token, the lower the corresponding probability. The greener the color of the token, the higher the corresponding probability.**
 
+### Perplexity
+
+#### Start demo
+Run the following command to start perplexity visualizer.
+
+```shell
+python3 visual_ppl.py
+```
+
 ### Tokenizer
 
 #### Start demo
@@ -58,9 +67,10 @@ User could select tokenizer to interacte with and text to encode. For speical st
 
 
 ## TODO
+- [x] Support ppl visualization.
+- [ ] Support OpenAI token visualization.
+- [ ] Support TGI inference visualization.
 - [ ] Support multi-turn chat visualization.
-- [ ] Support ppl visualization.
-- [ ] Support TGI generate result.
 - [ ] Support dark mode.
 
 
