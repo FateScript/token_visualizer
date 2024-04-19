@@ -12,6 +12,7 @@ BASE_URL = ensure_os_env("BASE_URL")
 OPENAI_API_KEY = ensure_os_env("OPENAI_KEY")
 
 # MODEL = token_visualizer.TransformerModel()
+# MODEL = token_visualizer.OpenAIModel
 MODEL = token_visualizer.OpenAIProxyModel(
     base_url=BASE_URL,
     api_key=OPENAI_API_KEY,

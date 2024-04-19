@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import gradio as gr
 from argparse import ArgumentParser
+
+import gradio as gr
 from loguru import logger
 
 import token_visualizer
@@ -38,6 +39,8 @@ def ppl_from_model(
     text = bos + text + eos
     tokens = MODEL.generate_inputs_prob(text)
     html = MODEL.html_to_visualize(tokens)
+    ppl = tokens[-1].ppl
+    html += "<br>" + f"<div><strong>PPL: {ppl:.4f}</strong></div>"
     return html
 
 
