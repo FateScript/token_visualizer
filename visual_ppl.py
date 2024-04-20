@@ -40,7 +40,7 @@ def ppl_from_model(
     tokens = MODEL.generate_inputs_prob(text)
     html = MODEL.html_to_visualize(tokens)
     ppl = tokens[-1].ppl
-    html += "<br>" + f"<div><strong>PPL: {ppl:.4f}</strong></div>"
+    html += "<br>" + f"<div><strong>ppl: {ppl:.2f}</strong></div>"
     return html
 
 
