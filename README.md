@@ -52,6 +52,11 @@ Run the following command to start perplexity visualizer.
 python3 visual_ppl.py
 ```
 
+#### Demo gif
+After inputing your text, you will see the perplexity and visualization result of the text.
+
+<img src="assets/ppl.gif">
+
 ### Tokenizer
 
 #### Start demo
