@@ -126,7 +126,7 @@ class TopkTokenModel:
     topp: float = 1.0
 
     topk_per_token: int = 5  # number of topk tokens to generate for each token
-    generated_answer: str = None  # generated answer from model, to display in frontend
+    generated_answer: Optional[str] = None  # generated answer from model, to display in frontend
     display_whitespace: bool = False
 
     def generate_topk_per_token(self, text: str) -> List[Token]:
@@ -151,7 +151,7 @@ class TopkTokenModel:
 @dataclass
 class TransformerModel(TopkTokenModel):
 
-    repo: str = None
+    repo: Optional[str] = None
     model = None
     tokenizer = None
     rev_vocab = None
@@ -167,6 +167,8 @@ class TransformerModel(TopkTokenModel):
     def generate_topk_per_token(self, text: str) -> List[Token]:
         model, tokenizer = self.get_model_tokenizer()
         rev_vocab = self.rev_vocab
+        assert rev_vocab, f"Reverse vocab not loaded for {self.repo} model"
+
         topk_tokens, topk_probs, sequences = generate_topk_token_prob(
             text, model, tokenizer, num_topk_tokens=self.topk_per_token,
             do_sample=self.do_sample,
@@ -216,10 +218,9 @@ def tgi_response(  # type: ignore[return]
 
     response = requests.post(url, json=data, headers=headers)
 
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Error {response.status_code}: {response.text}")
+    if response.status_code != 200:
+        logger.error(f"Error {response.status_code}: {response.text}")
+    return response.json()
 
 
 @dataclass
@@ -227,7 +228,9 @@ class TGIModel(TopkTokenModel):
 
     url: Optional[str] = None
     system_prompt = ""
+    details: bool = False
     decoder_input_details: bool = False  # input logprobs
+    num_prefill_tokens: Optional[int] = None
 
     # tgi support top_n_tokens, reference below:
     # https://github.com/huggingface/text-generation-inference/blob/7dbaf9e9013060af52024ea1a8b361b107b50a69/proto/generate.proto#L108-L109
@@ -235,10 +238,10 @@ class TGIModel(TopkTokenModel):
     def generate_topk_per_token(self, text: str) -> List[Token]:
         raise NotImplementedError
 
-    def generate_inputs_prob(self, text: str) -> List[Token]:
-        assert self.url is not None, "Please provide url to access tgi api."
+    def response_to_inputs(self, inputs: str) -> Dict:
+        assert self.url, f"Please provide url to access tgi api. url: {self.url}"
         json_response = tgi_response(
-            text, url=self.url,
+            inputs, url=self.url,
             max_new_tokens=self.max_tokens,
             repetition_penalty=self.repetition_penalty,
             temperature=self.temperature,
@@ -248,6 +251,11 @@ class TGIModel(TopkTokenModel):
             decoder_input_details=self.decoder_input_details,
         )
         response = json_response[0]
+        self.generated_answer = response["generated_text"]
+        return response
+
+    def generate_inputs_prob(self, text: str) -> List[Token]:
+        response = self.response_to_inputs(text)
         token_details = response["details"]["prefill"]
         tokens = []
         for token in token_details:
@@ -257,17 +265,24 @@ class TGIModel(TopkTokenModel):
             tokens.append(Token(token["text"], math.exp(logprob)))
         return tokens
 
+    def set_num_prefill_tokens(self, response):
+        if self.details:
+            self.num_prefill_tokens = response["details"]["prefill_tokens"]
+        else:
+            self.num_prefill_tokens = None
+
+
 @dataclass
 class OpenAIModel(TopkTokenModel):
-    api_key: str = None
-    base_url = None
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
 
     system_prompt: str = ""
     model_name: str = "gpt-4-0125-preview"
     # choices for model_name: see https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
     json_mode: bool = False
     logprobs: bool = False
-    seed: int = None
+    seed: Optional[int] = None
     top_logprobs: int = 5
 
     def __post_init__(self):
@@ -296,15 +311,15 @@ class OpenAIModel(TopkTokenModel):
 
 @dataclass
 class OpenAIProxyModel(TopkTokenModel):
-    api_key: str = None
-    base_url: str = None
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
 
     system_prompt = ""
     model_name: str = "gpt-4-0125-preview"
     # choices for model_name: see https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
     json_mode: bool = False
     logprobs: bool = False
-    seed: int = None
+    seed: Optional[int] = None
     top_logprobs: int = 5
 
     def __post_init__(self):
@@ -331,7 +346,7 @@ class OpenAIProxyModel(TopkTokenModel):
         }
         response = self.session.post(self.base_url, headers=headers, data=json.dumps(payload))
         if response.status_code != 200:
-            err_msg = f"Access openai error, status code: {response.status_code}, errmsg: {response.text}"
+            err_msg = f"Access openai error, status code: {response.status_code}, errmsg: {response.text}"   # noqa
             raise ValueError(err_msg, response.status_code)
 
         data = json.loads(response.text)

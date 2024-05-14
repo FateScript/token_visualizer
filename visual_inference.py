@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from argparse import ArgumentParser
 from typing import Tuple
 
 import gradio as gr
@@ -10,13 +11,28 @@ from token_visualizer import css_style, ensure_os_env
 
 BASE_URL = ensure_os_env("BASE_URL")
 OPENAI_API_KEY = ensure_os_env("OPENAI_KEY")
+logger.info(f"OPENAI_API_KEY: {OPENAI_API_KEY}")
+
+
+def make_parser() -> ArgumentParser:
+    parser = ArgumentParser("Inference process visualizer")
+    parser.add_argument(
+        "-s", "--share", action="store_true",
+        help="share service to the internet"
+    )
+    parser.add_argument(
+        "-p", "--port", type=int, default=12123,
+        help="port to run the service, default to 12123"
+    )
+    return parser
+
 
 # MODEL = token_visualizer.TransformerModel()
 # MODEL = token_visualizer.OpenAIModel
 MODEL = token_visualizer.OpenAIProxyModel(
     base_url=BASE_URL,
     api_key=OPENAI_API_KEY,
-    model_name="gpt-4-turbo-preview",
+    model_name="gpt-4-turbo-2024-04-09",
 )
 
 
@@ -39,16 +55,25 @@ def text_analysis(
 
     tokens = MODEL.generate_topk_per_token(text)
     html = MODEL.html_to_visualize(tokens)
+
+    html += "<br>"
+    if isinstance(MODEL, token_visualizer.TGIModel) and MODEL.num_prefill_tokens:
+        html += f"<div><strong>input tokens: {MODEL.num_prefill_tokens}</strong></div>"
+    html += f"<div><strong>output tokens: {len(tokens)}</strong></div>"
+
     return MODEL.generated_answer, html
 
 
 def demo(share: bool = True):
+    args = make_parser().parse_args()
+    logger.info(f"Args: {args}")
+
     demo = gr.Interface(
         text_analysis,
         [
             gr.TextArea(placeholder="Please input text here"),
             gr.Checkbox(value=False, label="display whitespace"),
-            gr.Checkbox(value=False, label="do_sample"),
+            gr.Checkbox(value=True, label="do_sample"),
             gr.Slider(minimum=0, maximum=1, step=0.05, value=1.0, label="temperature"),
             gr.Slider(minimum=1, maximum=4096, step=1, value=256, label="max tokens"),
             gr.Slider(minimum=1, maximum=2, step=0.1, value=1.0, label="repetition penalty"),
@@ -67,8 +92,12 @@ def demo(share: bool = True):
         title="LLM inference analysis",
         css=css_style(),
     )
-    demo.launch(share=share)
+    demo.launch(
+        server_name="0.0.0.0",
+        share=args.share,
+        server_port=args.port,
+    )
 
 
 if __name__ == "__main__":
-    demo(share=False)
+    demo()

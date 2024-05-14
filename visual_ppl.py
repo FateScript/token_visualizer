@@ -30,6 +30,7 @@ def ppl_from_model(
         display_whitespace (bool): whether to display whitespace for output text.
             If set to True, whitespace will be displayed as "␣".
     """
+    url = url.strip()
     assert url, f"Please provide url of your tgi model. Current url: {url}"
     logger.info(f"Set url to {url}")
     MODEL.url = url
@@ -39,8 +40,12 @@ def ppl_from_model(
     text = bos + text + eos
     tokens = MODEL.generate_inputs_prob(text)
     html = MODEL.html_to_visualize(tokens)
+
+    # display tokens and ppl at the end
+    html += "<br>"
+    html += f"<div><strong>total tokens: {len(tokens)}</strong></div>"
     ppl = tokens[-1].ppl
-    html += "<br>" + f"<div><strong>ppl: {ppl:.2f}</strong></div>"
+    html += f"<div><strong>ppl: {ppl:.4f}</strong></div>"
     return html
 
 

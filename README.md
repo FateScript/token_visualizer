@@ -73,7 +73,8 @@ User could select tokenizer to interacte with and text to encode. For speical st
 
 ## TODO
 - [x] Support ppl visualization.
-- [ ] Support OpenAI token visualization.
+- [ ] Select transformers/openai/TGI with cli.
+- [ ] Support OpenAI tokenizer visualization.
 - [ ] Support TGI inference visualization.
 - [ ] Support multi-turn chat visualization.
 - [ ] Support dark mode.
