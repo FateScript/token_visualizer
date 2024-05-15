@@ -2,12 +2,13 @@
 
 import os
 from functools import lru_cache
-from loguru import logger
 from typing import Dict
 
 import gradio as gr
-from sentencepiece import SentencePieceProcessor
+from loguru import logger
 from transformers import AutoTokenizer
+
+from sentencepiece import SentencePieceProcessor
 
 CANDIDATES = [  # model name sorted by alphabet
     "baichuan-inc/Baichuan2-13B-Chat",

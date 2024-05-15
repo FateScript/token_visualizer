@@ -255,6 +255,7 @@ class TGIModel(TopkTokenModel):
         return response
 
     def generate_inputs_prob(self, text: str) -> List[Token]:
+        assert self.decoder_input_details, "Please set decoder_input_details to True."
         response = self.response_to_inputs(text)
         token_details = response["details"]["prefill"]
         tokens = []
@@ -281,9 +282,7 @@ class OpenAIModel(TopkTokenModel):
     model_name: str = "gpt-4-0125-preview"
     # choices for model_name: see https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
     json_mode: bool = False
-    logprobs: bool = False
     seed: Optional[int] = None
-    top_logprobs: int = 5
 
     def __post_init__(self):
         assert self.api_key is not None, "Please provide api key to access openai api."
@@ -298,10 +297,9 @@ class OpenAIModel(TopkTokenModel):
             kwargs["seed"] = self.seed
         if self.json_mode:
             kwargs["response_format"] = {"type": "json_object"}
-        if self.top_logprobs > 0:
+        if self.topk_per_token > 0:
             kwargs["logprobs"] = True
-            assert self.top_logprobs >= 1 and self.top_logprobs <= 5
-            kwargs["top_logprobs"] = self.top_logprobs
+            kwargs["top_logprobs"] = self.topk_per_token
 
         payload = openai_payload(text, self.model_name, system_prompt=self.system_prompt, **kwargs)
         completion = self.client.completions.create(payload)
@@ -318,9 +316,7 @@ class OpenAIProxyModel(TopkTokenModel):
     model_name: str = "gpt-4-0125-preview"
     # choices for model_name: see https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
     json_mode: bool = False
-    logprobs: bool = False
     seed: Optional[int] = None
-    top_logprobs: int = 5
 
     def __post_init__(self):
         assert self.base_url is not None, "Please provide url to access openai api."
@@ -361,10 +357,9 @@ class OpenAIProxyModel(TopkTokenModel):
             kwargs["seed"] = self.seed
         if self.json_mode:
             kwargs["response_format"] = {"type": "json_object"}
-        if self.top_logprobs > 0:
+        if self.topk_per_token > 0:
             kwargs["logprobs"] = True
-            assert self.top_logprobs >= 1 and self.top_logprobs <= 5
-            kwargs["top_logprobs"] = self.top_logprobs
+            kwargs["top_logprobs"] = self.topk_per_token
 
         payload = openai_payload(text, self.model_name, system_prompt=self.system_prompt, **kwargs)
         response = self.openai_api_call(payload)
