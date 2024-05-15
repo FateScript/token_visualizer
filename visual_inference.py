@@ -11,29 +11,73 @@ from token_visualizer import css_style, ensure_os_env
 
 BASE_URL = ensure_os_env("BASE_URL")
 OPENAI_API_KEY = ensure_os_env("OPENAI_KEY")
-logger.info(f"OPENAI_API_KEY: {OPENAI_API_KEY}")
+TGI_URL = ensure_os_env("TGI_URL")
 
 
 def make_parser() -> ArgumentParser:
     parser = ArgumentParser("Inference process visualizer")
     parser.add_argument(
+        "-t", "--type",
+        choices=["llm", "tgi", "oai", "oai-proxy"],
+        default="oai-proxy",
+        help="Type of model to use, default to openai-proxy"
+    )
+    parser.add_argument(
+        "--hf-repo", type=str, default=None,
+        help="Huggingface model repository, used when type is 'llm'. Default to None"
+    )
+    parser.add_argument(
+        "--oai-model", type=str, default="gpt-4-turbo-2024-04-09",
+        help="OpenAI model name, used when type is 'oai'/'oai-proxy'. "
+        "Check https://platform.openai.com/docs/models for more details. "
+        "Default to `gpt-4-turbo-2024-04-09`."
+    )
+    parser.add_argument(
+        "--oai-key", type=str, default=None,
+        help="OpenAI api key, used when type is 'oai'/'oai-proxy'. "
+        "If provided, will override OPENAI_KEY env variable.",
+    )
+    parser.add_argument(
+        "--tgi-url", type=str, default=None,
+        help="Service url of TGI model, used when type is 'tgi'. "
+        "If provided, will override TGI_URL env variable.",
+    )
+    parser.add_argument(
         "-s", "--share", action="store_true",
-        help="share service to the internet"
+        help="Share service to the internet",
     )
     parser.add_argument(
         "-p", "--port", type=int, default=12123,
-        help="port to run the service, default to 12123"
+        help="Port to run the service, default to 12123"
     )
     return parser
 
 
-# MODEL = token_visualizer.TransformerModel()
-# MODEL = token_visualizer.OpenAIModel
-MODEL = token_visualizer.OpenAIProxyModel(
-    base_url=BASE_URL,
-    api_key=OPENAI_API_KEY,
-    model_name="gpt-4-turbo-2024-04-09",
-)
+args = make_parser().parse_args()
+logger.info(f"Args: {args}")
+
+MODEL: token_visualizer.TopkTokenModel = None
+
+if args.type == "llm":
+    MODEL = token_visualizer.TransformerModel(repo=args.repo)
+elif args.type == "tgi":
+    if args.tgi_url:
+        TGI_URL = args.tgi_url
+    MODEL = token_visualizer.TGIModel(url=TGI_URL)
+elif args.type == "oai":
+    MODEL = token_visualizer.OpenAIModel(
+        base_url=BASE_URL,
+        api_key=OPENAI_API_KEY,
+        model_name=args.oai_model,
+    )
+elif args.type == "oai-proxy":
+    MODEL = token_visualizer.OpenAIProxyModel(
+        base_url=BASE_URL,
+        api_key=OPENAI_API_KEY,
+        model_name="gpt-4-turbo-2024-04-09",
+    )
+else:
+    raise ValueError(f"Unknown model type {args.type}")
 
 
 @logger.catch(reraise=True)
@@ -65,8 +109,7 @@ def text_analysis(
 
 
 def demo(share: bool = True):
-    args = make_parser().parse_args()
-    logger.info(f"Args: {args}")
+    global args
 
     demo = gr.Interface(
         text_analysis,
