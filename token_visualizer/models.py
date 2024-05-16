@@ -200,6 +200,7 @@ def tgi_response(  # type: ignore[return]
     top_p: float = 0.85,
     do_sample: bool = True,
     topk_logits: Optional[int] = None,
+    details: bool = False,
     **kwargs
 ) -> Dict:
     headers = {"Content-Type": "application/json"}
@@ -209,6 +210,7 @@ def tgi_response(  # type: ignore[return]
         "do_sample": do_sample,
         "temperature": temperature,
         "top_n_tokens": topk_logits,
+        "details": details,
         **kwargs,
     }
     if do_sample:  # tgi use or logic for top_k/top_p with do_sample
@@ -235,9 +237,6 @@ class TGIModel(TopkTokenModel):
     # tgi support top_n_tokens, reference below:
     # https://github.com/huggingface/text-generation-inference/blob/7dbaf9e9013060af52024ea1a8b361b107b50a69/proto/generate.proto#L108-L109
 
-    def generate_topk_per_token(self, text: str) -> List[Token]:
-        raise NotImplementedError
-
     def response_to_inputs(self, inputs: str) -> Dict:
         assert self.url, f"Please provide url to access tgi api. url: {self.url}"
         json_response = tgi_response(
@@ -249,10 +248,31 @@ class TGIModel(TopkTokenModel):
             top_p=min(self.topp, 0.99),
             do_sample=self.do_sample,
             decoder_input_details=self.decoder_input_details,
+            topk_logits=self.topk_per_token,
+            details=self.details,
         )
         response = json_response[0]
         self.generated_answer = response["generated_text"]
         return response
+
+    def generate_topk_per_token(self, text: str) -> List[Token]:
+        assert self.details, "Please set details to True."
+        response = self.response_to_inputs(text)
+        tokens: List[Token] = []
+
+        token_details = response["details"]["tokens"]
+        topk_tokens = response["details"]["top_tokens"]
+
+        for details, candidate in zip(token_details, topk_tokens):
+            candidate_tokens = [Token(x["text"], math.exp(x["logprob"])) for x in candidate]
+            token = Token(
+                details["text"],
+                math.exp(details["logprob"]),
+                top_candidates=candidate_tokens,
+            )
+            tokens.append(token)
+
+        return tokens
 
     def generate_inputs_prob(self, text: str) -> List[Token]:
         assert self.decoder_input_details, "Please set decoder_input_details to True."

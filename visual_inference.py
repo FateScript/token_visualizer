@@ -63,7 +63,7 @@ if args.type == "llm":
 elif args.type == "tgi":
     if args.tgi_url:
         TGI_URL = args.tgi_url
-    MODEL = token_visualizer.TGIModel(url=TGI_URL)
+    MODEL = token_visualizer.TGIModel(url=TGI_URL, details=True)
 elif args.type == "oai":
     MODEL = token_visualizer.OpenAIModel(
         base_url=BASE_URL,
