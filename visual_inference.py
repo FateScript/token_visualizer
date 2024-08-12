@@ -59,7 +59,7 @@ logger.info(f"Args: {args}")
 MODEL: token_visualizer.TopkTokenModel = None
 
 if args.type == "llm":
-    MODEL = token_visualizer.TransformerModel(repo=args.repo)
+    MODEL = token_visualizer.TransformerModel(repo=args.hf_repo)
 elif args.type == "tgi":
     if args.tgi_url:
         TGI_URL = args.tgi_url
