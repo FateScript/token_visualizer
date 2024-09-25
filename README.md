@@ -29,7 +29,7 @@ python3 -c "import token_visualizer; print(token_visualizer.__file__)"
 #### Start demo
 Run the following command to start inference visualizer.
 ```shell
-python3 visual_inference.py
+python3 visualizer.py
 ```
 
 The command will start a OpenAIProxy model, to use it without exception, user should fill in the value of `BASE_URL` and `OPENAI_KEY`.
@@ -46,10 +46,10 @@ After inputing your prompt, you will see the large language model's answer and t
 ### Perplexity
 
 #### Start demo
-Run the following command to start perplexity visualizer.
+Run the following command to start perplexity visualizer, then click the `ppl` tab.
 
 ```shell
-python3 visual_ppl.py
+python3 visualizer.py
 ```
 
 #### Demo gif
