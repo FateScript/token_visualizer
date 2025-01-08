@@ -65,6 +65,11 @@ def generate_topk_token_prob(
     """
     Generate topk token and it's prob for each token of auto regressive model.
     """
+    if not torch.cuda.is_available():
+        inputs_device = "cpu"
+        model = model.to(inputs_device)
+        logger.warning(f"CUDA not available, switch to {inputs_device}.")
+
     logger.info(f"generate response for:\n{inputs}")
     inputs = tokenizer(inputs, return_tensors='pt')
     inputs = inputs.to(inputs_device)
@@ -179,6 +184,8 @@ class TransformerModel(TopkTokenModel):
             top_k=self.topk,
             top_p=self.topp,
         )
+        self.generated_answer = tokenizer.decode(sequences[0])
+
         seq_length = topk_tokens.shape[0]
         np_seq = sequences[0, -seq_length:].cpu().numpy()
         gen_tokens = []

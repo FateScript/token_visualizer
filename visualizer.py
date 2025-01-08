@@ -8,7 +8,7 @@ import gradio as gr
 from loguru import logger
 
 import token_visualizer
-from token_visualizer import css_style, ensure_os_env
+from token_visualizer import TopkTokenModel, css_style, ensure_os_env
 
 
 def make_parser() -> ArgumentParser:
@@ -93,7 +93,7 @@ def text_analysis(
     topk: int,
     topp: float,
     topk_per_token: int,
-    model,  # model should be built in the interface
+    model: TopkTokenModel,  # model should be built in the interface
 ) -> Tuple[str, str]:
     model.display_whitespace = display_whitespace
     model.do_sample = do_sample
